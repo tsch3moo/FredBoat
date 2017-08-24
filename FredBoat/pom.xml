@@ -81,6 +81,12 @@
             <version>1.0.5</version>
         </dependency>
         <dependency>
+            <!-- async packet provider for non-blocking NAS buffer filling -->
+            <groupId>com.github.shredder121</groupId>
+            <artifactId>jda-async-packetprovider</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
             <!-- cleverbot.io api -->
             <groupId>frederikam</groupId>
             <artifactId>JCA</artifactId>

@@ -26,6 +26,7 @@
 package fredboat;
 
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
+import com.github.shredder121.asyncaudio.jda.AsyncPacketProviderFactory;
 import fredboat.audio.PlayerRegistry;
 import fredboat.event.EventLogger;
 import fredboat.event.ShardWatchdogListener;
@@ -83,7 +84,9 @@ public class FredBoatBot extends FredBoat {
                         && !System.getProperty("os.arch").equalsIgnoreCase("arm-linux")
                         && !System.getProperty("os.arch").equalsIgnoreCase("darwin")
                         && !System.getProperty("os.name").equalsIgnoreCase("Mac OS X")) {
-                    builder.setAudioSendFactory(new NativeAudioSendFactory());
+                    builder.setAudioSendFactory(
+                            AsyncPacketProviderFactory.adapt(new NativeAudioSendFactory())
+                    );
                 }
                 if (Config.CONFIG.getNumShards() > 1) {
                     builder.useSharding(shardId, Config.CONFIG.getNumShards());
