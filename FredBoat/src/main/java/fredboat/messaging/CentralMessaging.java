@@ -25,6 +25,7 @@
 
 package fredboat.messaging;
 
+import io.prometheus.client.Counter;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.MessageBuilder;
@@ -51,6 +52,27 @@ import java.util.function.Consumer;
  * Everything related to sending things out from FredBoat
  */
 public class CentralMessaging {
+
+    private static final Counter messagesSent = Counter.build()
+            .name("fredboat_messaging_messages_sent_total")
+            .help("Total amount of messages sent by fredboat")
+            .labelNames("type") //message, file
+            .register();
+
+    private static final Counter messagesEdited = Counter.build()
+            .name("fredboat_messaging_messages_edited_total")
+            .help("Total amount of messages edited by fredboat")
+            .register();
+
+    private static final Counter messagesDeleted = Counter.build()
+            .name("fredboat_messaging_messages_deleted_total")
+            .help("Total amount of messages deleted by fredboat")
+            .register();
+
+    private static final Counter typing = Counter.build()
+            .name("fredboat_messaging_typing_total")
+            .help("Total amount of typing events sent by fredboat")
+            .register();
 
 
     // ********************************************************************************
@@ -217,6 +239,7 @@ public class CentralMessaging {
                     request.onFailure(response);
             }
         }.queue();
+        messagesSent.labels("shardless").inc();
     }
 
     // ********************************************************************************
@@ -343,6 +366,7 @@ public class CentralMessaging {
 
     public static void editMessageById(MessageChannel channel, long oldMessageId, Message newMessage) {
         channel.editMessageById(oldMessageId, newMessage).queue();
+        messagesEdited.inc();
     }
 
     // ********************************************************************************
@@ -351,6 +375,7 @@ public class CentralMessaging {
 
     public static void sendTyping(MessageChannel channel) {
         channel.sendTyping().queue();
+        typing.inc();
     }
 
     //messages must all be from the same channel
@@ -362,15 +387,18 @@ public class CentralMessaging {
             } else {
                 messages.forEach(m -> channel.deleteMessageById(m.getIdLong()).queue());
             }
+            messagesDeleted.inc(messages.size());
         }
     }
 
     public static void deleteMessage(Message message) {
         message.delete().queue();
+        messagesDeleted.inc();
     }
 
     public static void deleteMessageById(MessageChannel channel, long messageId) {
         channel.deleteMessageById(messageId).queue();
+        messagesDeleted.inc();
     }
 
     public static EmbedBuilder addFooter(EmbedBuilder eb, Member author) {
@@ -407,6 +435,7 @@ public class CentralMessaging {
         };
 
         channel.sendMessage(message).queue(successWrapper, failureWrapper);
+        messagesSent.labels("message").inc();
         return result;
     }
 
@@ -435,6 +464,7 @@ public class CentralMessaging {
         };
 
         channel.sendFile(file, message).queue(successWrapper, failureWrapper);
+        messagesSent.labels("file").inc();
         return result;
     }
 
@@ -463,6 +493,7 @@ public class CentralMessaging {
         };
 
         oldMessage.editMessage(newMessage).queue(successWrapper, failureWrapper);
+        messagesEdited.inc();
         return result;
     }
 

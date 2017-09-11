@@ -42,6 +42,7 @@ import fredboat.shared.constant.BotConstants;
 import fredboat.shared.constant.DistributionEnum;
 import fredboat.util.DiscordUtil;
 import fredboat.util.TextUtils;
+import io.prometheus.client.Counter;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
@@ -52,13 +53,16 @@ import org.slf4j.LoggerFactory;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class CommandManager {
 
     private static final Logger log = LoggerFactory.getLogger(CommandManager.class);
 
-    public static final AtomicInteger commandsExecuted = new AtomicInteger(0);
+    public static final Counter totalCommandsExecuted = Counter.build()
+            .name("fredboat_commands_executed_total")
+            .help("Total executed commands")
+            .labelNames("class") // use the simple name of the command class
+            .register();
 
     public static void prefixCalled(CommandContext context) {
         Guild guild = context.guild;
@@ -66,7 +70,7 @@ public class CommandManager {
         TextChannel channel = context.channel;
         Member invoker = context.invoker;
 
-        commandsExecuted.getAndIncrement();
+        totalCommandsExecuted.labels(invoked.getClass().getSimpleName()).inc();
 
         if (Config.CONFIG.getDistribution() == DistributionEnum.MAIN
                 && invoked instanceof HelpCommand
